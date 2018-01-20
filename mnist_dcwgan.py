@@ -160,11 +160,11 @@ def train(epoch):
         losses_g.append(float(loss_g.data))
 
         if batch_index % args.log_interval == 0:
-            print('Train epoch:', epoch,
-                  'batch index:', batch_index,
-                  'discriminator loss:', float(loss_d.data),
-                  'generator loss', float(loss_g.data))
-
+            print('{}: {}, {}: {}, {}: {:.4f}, {}: {:.4f}.'.format(
+                'Train epoch', epoch,
+                'batch index', batch_index,
+                'discriminator loss:', float(loss_d.data),
+                'generator loss', float(loss_g.data)))
             plot_losses()
 
     # plot samples
