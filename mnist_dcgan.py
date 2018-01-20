@@ -177,13 +177,12 @@ def train(epoch):
     # plot samples
     plot_samples(epoch)
 
-
-
 def plot_losses():
-    fig, ax = plt.subplots()
-    ax.plot(losses_d, label='discriminator loss')
-    ax.plot(losses_g, label='generator loss')
-    ax.legend()
+    fig, ax = plt.subplots(nrows=2)
+    ax[0].plot(losses_d, c='r', label='discriminator loss')
+    ax[0].legend()
+    ax[1].plot(losses_g, c='b', label='generator loss')
+    ax[1].legend()
     fig.savefig(os.path.join(args.image_dir, 'losses.png'))
     plt.close(fig)
 
