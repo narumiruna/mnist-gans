@@ -169,8 +169,8 @@ def train(epoch):
         if batch_index % args.log_interval == 0:
             print("Train epoch:", epoch,
                   "batch index:", batch_index,
-                  "loss_d", float(loss_d.data),
-                  "loss_g", float(loss_g.data))
+                  "discriminator loss:", float(loss_d.data),
+                  "generator loss:", float(loss_g.data))
 
             plot_losses()
 
