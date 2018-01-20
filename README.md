@@ -1,5 +1,13 @@
 # MNIST GANs
 
+## Autoencoder
+
+### Run
+
+```
+$ python3 autoencoder.py
+```
+
 ## DCGAN
 
 ### Run
