@@ -124,8 +124,6 @@ def train(epoch):
 
     for batch_index, (real_x, _) in enumerate(train_dataloader):
         # train discriminator
-        optimizer_d.zero_grad()
-
         real_x = Variable(real_x)
         rand_z = Variable(torch.randn(len(real_x), 100))
 
@@ -136,14 +134,13 @@ def train(epoch):
         fake_x = generator(rand_z)
         loss_d = -discriminator(real_x).mean() + discriminator(fake_x).mean()
 
+        optimizer_d.zero_grad()
         loss_d.backward()
         optimizer_d.step()
         for p in discriminator.parameters():
             p.data.clamp_(-args.c, args.c)
 
         # train generator
-        optimizer_g.zero_grad()
-
         rand_z = Variable(torch.randn(len(real_x), 100))
 
         if use_cuda:
@@ -152,6 +149,7 @@ def train(epoch):
         fake_x = generator(rand_z)
         loss_g = - discriminator(fake_x).mean()
 
+        optimizer_g.zero_grad()
         loss_g.backward()
         optimizer_g.step()
 

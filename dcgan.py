@@ -126,7 +126,6 @@ def train(epoch):
 
     for batch_index, (real_x, _) in enumerate(train_dataloader):
         # train discriminator
-        optimizer_d.zero_grad()
 
         real_x = Variable(real_x)
         rand_z = Variable(torch.randn(len(real_x), 100))
@@ -141,14 +140,13 @@ def train(epoch):
 
         fake_x = generator(rand_z)
         loss_d = F.binary_cross_entropy(discriminator(real_x), real_labels) \
-            + F.binary_cross_entropy(discriminator(fake_x), fake_labels)
+               + F.binary_cross_entropy(discriminator(fake_x), fake_labels)
 
+        optimizer_d.zero_grad()
         loss_d.backward()
         optimizer_d.step()
 
         # train generator
-        optimizer_g.zero_grad()
-
         rand_z = Variable(torch.randn(len(real_x), 100))
         real_labels = Variable(torch.ones(len(real_x), 1))
 
@@ -159,6 +157,7 @@ def train(epoch):
         fake_x = generator(rand_z)
         loss_g = F.binary_cross_entropy(discriminator(fake_x), real_labels)
 
+        optimizer_g.zero_grad()
         loss_g.backward()
         optimizer_g.step()
 
@@ -173,7 +172,7 @@ def train(epoch):
                 'discriminator loss:', float(loss_d.data),
                 'generator loss', float(loss_g.data)))
             plot_losses()
-        
+
 
     # plot samples
     plot_samples(epoch)
