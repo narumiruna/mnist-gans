@@ -103,3 +103,5 @@ ENV/
 data/
 dcgan/
 lsgan/
+wgan/
+wgangp/

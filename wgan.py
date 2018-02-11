@@ -105,16 +105,16 @@ train_dataloader = data.DataLoader(datasets.MNIST(args.data_dir,
                                    num_workers=args.num_workers)
 
 
-discriminator = Discriminator()
-generator = Generator()
+d = Discriminator()
+g = Generator()
 
 if use_cuda:
-    discriminator.cuda()
-    generator.cuda()
+    d.cuda()
+    g.cuda()
 
-optimizer_d = torch.optim.RMSprop(discriminator.parameters(),
+optimizer_d = torch.optim.RMSprop(d.parameters(),
                                   lr=args.learning_rate)
-optimizer_g = torch.optim.RMSprop(generator.parameters(),
+optimizer_g = torch.optim.RMSprop(g.parameters(),
                                   lr=args.learning_rate)
 
 losses_d = []
@@ -122,32 +122,32 @@ losses_g = []
 
 def train(epoch):
 
-    for batch_index, (real_x, _) in enumerate(train_dataloader):
+    for batch_index, (x, _) in enumerate(train_dataloader):
         # train discriminator
-        real_x = Variable(real_x)
-        rand_z = Variable(torch.randn(len(real_x), 100))
+        x = Variable(x)
+        z = Variable(torch.randn(len(x), 100))
 
         if use_cuda:
-            real_x = real_x.cuda()
-            rand_z = rand_z.cuda()
+            x = x.cuda()
+            z = z.cuda()
 
-        fake_x = generator(rand_z)
-        loss_d = -discriminator(real_x).mean() + discriminator(fake_x).mean()
+        x_fake = g(z)
+        loss_d = -d(x).mean() + d(x_fake).mean()
 
         optimizer_d.zero_grad()
         loss_d.backward()
         optimizer_d.step()
-        for p in discriminator.parameters():
+        for p in d.parameters():
             p.data.clamp_(-args.c, args.c)
 
         # train generator
-        rand_z = Variable(torch.randn(len(real_x), 100))
+        z = Variable(torch.randn(len(x), 100))
 
         if use_cuda:
-            rand_z = rand_z.cuda()
+            z = z.cuda()
 
-        fake_x = generator(rand_z)
-        loss_g = - discriminator(fake_x).mean()
+        x_fake = g(z)
+        loss_g = - d(x_fake).mean()
 
         optimizer_g.zero_grad()
         loss_g.backward()
@@ -178,17 +178,17 @@ def plot_losses():
     plt.close(fig)
 
 def plot_samples(epoch):
-    generator.eval()
+    g.eval()
 
-    rand_z = Variable(torch.randn(16 * 16, 100), volatile=True)
+    z = Variable(torch.randn(16 * 16, 100), volatile=True)
     if use_cuda:
-        rand_z = rand_z.cuda()
+        z = z.cuda()
 
     filename = os.path.join(args.image_dir,
                            'samples_epoch_{}.jpg'.format(epoch,))
-    save_image(generator(rand_z).data, filename, normalize=True, nrow=16)
+    save_image(g(z).data, filename, normalize=True, nrow=16)
 
-    generator.train()
+    g.train()
 
 
 for epoch in range(args.epochs):

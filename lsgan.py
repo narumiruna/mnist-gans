@@ -178,13 +178,13 @@ def plot_losses():
 def plot_samples(epoch):
     g.eval()
 
-    rand_z = Variable(torch.randn(16 * 16, 100), volatile=True)
+    z = Variable(torch.randn(16 * 16, 100), volatile=True)
     if use_cuda:
-        rand_z = rand_z.cuda()
+        z = z.cuda()
 
     filename = os.path.join(args.image_dir,
                            'samples_epoch_{}.jpg'.format(epoch,))
-    save_image(g(rand_z).data, filename, normalize=True, nrow=16)
+    save_image(g(z).data, filename, normalize=True, nrow=16)
 
     g.train()
 

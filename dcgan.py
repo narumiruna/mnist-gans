@@ -105,17 +105,17 @@ train_dataloader = data.DataLoader(datasets.MNIST(args.data_dir,
                                    num_workers=args.num_workers)
 
 
-discriminator = Discriminator()
-generator = Generator()
+d = Discriminator()
+g = Generator()
 
 if use_cuda:
-    discriminator.cuda()
-    generator.cuda()
+    d.cuda()
+    g.cuda()
 
-optimizer_d = torch.optim.Adam(discriminator.parameters(),
+optimizer_d = torch.optim.Adam(d.parameters(),
                                lr=args.learning_rate,
                                betas=(0.5, 0.999))
-optimizer_g = torch.optim.Adam(generator.parameters(),
+optimizer_g = torch.optim.Adam(g.parameters(),
                                lr=args.learning_rate,
                                betas=(0.5, 0.999))
 
@@ -124,38 +124,35 @@ losses_g = []
 
 def train(epoch):
 
-    for batch_index, (real_x, _) in enumerate(train_dataloader):
+    for batch_index, (x, _) in enumerate(train_dataloader):
         # train discriminator
-
-        real_x = Variable(real_x)
-        rand_z = Variable(torch.randn(len(real_x), 100))
-        real_labels = Variable(torch.ones(len(real_x), 1))
-        fake_labels = Variable(torch.zeros(len(real_x), 1))
+        x = Variable(x)
+        z = Variable(torch.randn(len(x), 100))
+        ones = Variable(torch.ones(len(x), 1))
+        zeros = Variable(torch.zeros(len(x), 1))
 
         if use_cuda:
-            real_x = real_x.cuda()
-            rand_z = rand_z.cuda()
-            real_labels = real_labels.cuda()
-            fake_labels = fake_labels.cuda()
+            x = x.cuda()
+            z = z.cuda()
+            ones = ones.cuda()
+            zeros = zeros.cuda()
 
-        fake_x = generator(rand_z)
-        loss_d = F.binary_cross_entropy(discriminator(real_x), real_labels) \
-               + F.binary_cross_entropy(discriminator(fake_x), fake_labels)
+        x_fake = g(z)
+        loss_d = F.binary_cross_entropy(d(x), ones) \
+               + F.binary_cross_entropy(d(x_fake), zeros)
 
         optimizer_d.zero_grad()
         loss_d.backward()
         optimizer_d.step()
 
         # train generator
-        rand_z = Variable(torch.randn(len(real_x), 100))
-        real_labels = Variable(torch.ones(len(real_x), 1))
+        z = Variable(torch.randn(len(x), 100))
 
         if use_cuda:
-            rand_z = rand_z.cuda()
-            real_labels = real_labels.cuda()
+            z = z.cuda()
 
-        fake_x = generator(rand_z)
-        loss_g = F.binary_cross_entropy(discriminator(fake_x), real_labels)
+        x_fake = g(z)
+        loss_g = F.binary_cross_entropy(d(x_fake), ones)
 
         optimizer_g.zero_grad()
         loss_g.backward()
@@ -187,17 +184,17 @@ def plot_losses():
     plt.close(fig)
 
 def plot_samples(epoch):
-    generator.eval()
+    g.eval()
 
-    rand_z = Variable(torch.randn(16 * 16, 100), volatile=True)
+    z = Variable(torch.randn(16 * 16, 100), volatile=True)
     if use_cuda:
-        rand_z = rand_z.cuda()
+        z = z.cuda()
 
     filename = os.path.join(args.image_dir,
                            'samples_epoch_{}.jpg'.format(epoch,))
-    save_image(generator(rand_z).data, filename, normalize=True, nrow=16)
+    save_image(g(z).data, filename, normalize=True, nrow=16)
 
-    generator.train()
+    g.train()
 
 
 for epoch in range(args.epochs):

@@ -141,17 +141,17 @@ def train(epoch):
             epsilon = epsilon.cuda()
             grad_outputs = grad_outputs.cuda()
 
-        fake_x = g(z).detach()
-        interpolates = epsilon * x + (1 - epsilon) * fake_x
+        x_fake = g(z).detach()
+        interpolates = epsilon * x + (1 - epsilon) * x_fake
         interpolates.requires_grad = True
 
         gradients = grad(d(interpolates),
                          interpolates,
                          grad_outputs=grad_outputs,
                          create_graph=True)[0]
-        gp = (gradients.view(len(x), -1).norm(2, dim=1) - 1).pow(2)
+        gradient_penalty = (gradients.view(len(x), -1).norm(2, dim=1) - 1).pow(2)
 
-        loss_d = d(fake_x).mean() - d(x).mean() + args.penalty_coefficient * gp.mean()
+        loss_d = d(x_fake).mean() - d(x).mean() + args.penalty_coefficient * gradient_penalty.mean()
 
         optimizer_d.zero_grad()
         loss_d.backward()
@@ -198,13 +198,13 @@ def plot_losses():
 def plot_samples(epoch):
     g.eval()
 
-    rand_z = Variable(torch.randn(16 * 16, 100), volatile=True)
+    z = Variable(torch.randn(16 * 16, 100), volatile=True)
     if use_cuda:
-        rand_z = rand_z.cuda()
+        z = z.cuda()
 
     filename = os.path.join(args.image_dir,
                             'samples_epoch_{}.jpg'.format(epoch,))
-    save_image(g(rand_z).data, filename, normalize=True, nrow=16)
+    save_image(g(z).data, filename, normalize=True, nrow=16)
 
     g.train()
 
