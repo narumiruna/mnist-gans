@@ -4,7 +4,7 @@ import os
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.autograd import Variable
+from torch.autograd import Variable, grad
 from torch.utils import data
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data-dir', type=str, default='data')
-parser.add_argument('--image-dir', '-d', type=str, default='lsgan')
+parser.add_argument('--image-dir', '-d', type=str, default='wgangp')
 parser.add_argument('--batch-size', '-bs', type=int, default=128)
 parser.add_argument('--learning-rate', '-lr', type=float, default=2e-4)
 parser.add_argument('--channels', type=int, default=8)
@@ -23,6 +23,7 @@ parser.add_argument('--num-workers', type=int, default=0)
 parser.add_argument('--epochs', type=int, default=20)
 parser.add_argument('--log-interval', '-li', type=int, default=10)
 parser.add_argument('--no-cuda', action='store_true')
+parser.add_argument('--penalty-coefficient', type=int, default=10)
 args = parser.parse_args()
 print(args)
 
@@ -33,6 +34,7 @@ ch = args.channels
 use_cuda = torch.cuda.is_available() and not args.no_cuda
 if use_cuda:
     print("Use CUDA.")
+
 
 class Generator(nn.Module):
     def __init__(self):
@@ -122,6 +124,7 @@ optimizer_g = torch.optim.Adam(g.parameters(),
 losses_d = []
 losses_g = []
 
+
 def train(epoch):
 
     for batch_index, (x, _) in enumerate(train_dataloader):
@@ -129,11 +132,26 @@ def train(epoch):
         x = Variable(x)
         z = Variable(torch.randn(len(x), 100))
 
+        epsilon = Variable(torch.rand(len(x), 1, 1, 1))
+        grad_outputs = Variable(torch.ones(len(x)))
+
         if use_cuda:
             x = x.cuda()
             z = z.cuda()
+            epsilon = epsilon.cuda()
+            grad_outputs = grad_outputs.cuda()
 
-        loss_d = 0.5 * (d(x) - 1).pow(2).mean() + 0.5 * d(g(z).detach()).pow(2).mean()
+        fake_x = g(z).detach()
+        interpolates = epsilon * x + (1 - epsilon) * fake_x
+        interpolates.requires_grad = True
+
+        gradients = grad(d(interpolates),
+                         interpolates,
+                         grad_outputs=grad_outputs,
+                         create_graph=True)[0]
+        gp = (gradients.view(len(x), -1).norm(2, dim=1) - 1).pow(2)
+
+        loss_d = d(fake_x).mean() - d(x).mean() + args.penalty_coefficient * gp.mean()
 
         optimizer_d.zero_grad()
         loss_d.backward()
@@ -145,7 +163,7 @@ def train(epoch):
         if use_cuda:
             z = z.cuda()
 
-        loss_g = 0.5 * (d(g(z)) - 1).pow(2).mean()
+        loss_g = - d(g(z)).mean()
 
         optimizer_g.zero_grad()
         loss_g.backward()
@@ -166,6 +184,7 @@ def train(epoch):
     # plot samples
     plot_samples(epoch)
 
+
 def plot_losses():
     fig, ax = plt.subplots(nrows=2)
     ax[0].plot(losses_d, c='r', label='discriminator loss')
@@ -175,6 +194,7 @@ def plot_losses():
     fig.savefig(os.path.join(args.image_dir, 'losses.png'))
     plt.close(fig)
 
+
 def plot_samples(epoch):
     g.eval()
 
@@ -183,7 +203,7 @@ def plot_samples(epoch):
         rand_z = rand_z.cuda()
 
     filename = os.path.join(args.image_dir,
-                           'samples_epoch_{}.jpg'.format(epoch,))
+                            'samples_epoch_{}.jpg'.format(epoch,))
     save_image(g(rand_z).data, filename, normalize=True, nrow=16)
 
     g.train()

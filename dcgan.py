@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data-dir', type=str, default='data')
-parser.add_argument('--image-dir', '-d', type=str, default='images')
+parser.add_argument('--image-dir', '-d', type=str, default='dcgan')
 parser.add_argument('--batch-size', '-bs', type=int, default=128)
 parser.add_argument('--learning-rate', '-lr', type=float, default=2e-4)
 parser.add_argument('--channels', type=int, default=8)
@@ -87,7 +87,7 @@ class Discriminator(nn.Module):
         )
 
     def forward(self, input_):
-        return self.conv(input_).view(-1, 1)
+        return self.conv(input_).view(-1)
 
 
 transform = transforms.Compose([
