@@ -54,11 +54,9 @@ class Solver:
         # makedir
         os.makedirs(self.type, exist_ok=True)
 
-
         self.picklefile = os.path.join(self.type, 'model.pickle')
         if os.path.exists(self.picklefile):
             self.load()
-
 
     def build_dataloader(self):
         self.transform = transforms.Compose([
@@ -101,8 +99,8 @@ class Solver:
         d = {
             'g_dict': self.g.state_dict(),
             'd_dict': self.d.state_dict(),
-            'g_optim_dict': self.g_optimizer.state_dict(),
-            'd_optim_dict': self.d_optimizer.state_dict()
+            'g_optim_dict': self.g_optim.state_dict(),
+            'd_optim_dict': self.d_optim.state_dict()
         }
 
         torch.save(d, self.picklefile)
@@ -114,8 +112,8 @@ class Solver:
 
         self.g.load_state_dict(d['g_dict'])
         self.d.load_state_dict(d['d_dict'])
-        self.g_optimizer.load_state_dict(d['g_optim_dict'])
-        self.d_optimizer.load_state_dict(d['d_optim_dict'])
+        self.g_optim.load_state_dict(d['g_optim_dict'])
+        self.d_optim.load_state_dict(d['d_optim_dict'])
 
         print('load')
 
@@ -135,12 +133,12 @@ class GAN(Solver):
             self.g.cuda()
             self.d.cuda()
 
-        self.g_optimizer = torch.optim.Adam(self.g.parameters(),
-                                            lr=self.g_lr,
-                                            betas=(self.g_beta1, self.g_beta2))
-        self.d_optimizer = torch.optim.Adam(self.d.parameters(),
-                                            lr=self.d_lr,
-                                            betas=(self.d_beta1, self.d_beta2))
+        self.g_optim = torch.optim.Adam(self.g.parameters(),
+                                        lr=self.g_lr,
+                                        betas=(self.g_beta1, self.g_beta2))
+        self.d_optim = torch.optim.Adam(self.d.parameters(),
+                                        lr=self.d_lr,
+                                        betas=(self.d_beta1, self.d_beta2))
 
     def train(self, epoch):
         bce = nn.BCELoss()
@@ -160,9 +158,9 @@ class GAN(Solver):
             x_fake = self.g(z).detach()
             d_loss = bce(self.d(x), ones) + bce(self.d(x_fake), zeros)
 
-            self.d_optimizer.zero_grad()
+            self.d_optim.zero_grad()
             d_loss.backward()
-            self.d_optimizer.step()
+            self.d_optim.step()
 
             # log
             self.d_loss.append(float(d_loss.data))
@@ -176,9 +174,9 @@ class GAN(Solver):
                 x_fake = self.g(z)
                 g_loss = bce(self.d(x_fake), ones)
 
-                self.g_optimizer.zero_grad()
+                self.g_optim.zero_grad()
                 g_loss.backward()
-                self.g_optimizer.step()
+                self.g_optim.step()
 
                 # log
                 self.g_loss.append(float(g_loss.data))
@@ -199,10 +197,10 @@ class WGAN(Solver):
             self.g.cuda()
             self.d.cuda()
 
-        self.g_optimizer = torch.optim.RMSprop(self.g.parameters(),
-                                               lr=self.g_lr)
-        self.d_optimizer = torch.optim.RMSprop(self.d.parameters(),
-                                               lr=self.d_lr)
+        self.g_optim = torch.optim.RMSprop(self.g.parameters(),
+                                           lr=self.g_lr)
+        self.d_optim = torch.optim.RMSprop(self.d.parameters(),
+                                           lr=self.d_lr)
 
     def train(self, epoch):
         for batch_index, (x, _) in enumerate(self.dataloader):
@@ -216,9 +214,9 @@ class WGAN(Solver):
             x_fake = self.g(z).detach()
             d_loss = -self.d(x).mean() + self.d(x_fake).mean()
 
-            self.d_optimizer.zero_grad()
+            self.d_optim.zero_grad()
             d_loss.backward()
-            self.d_optimizer.step()
+            self.d_optim.step()
 
             for p in self.d.parameters():
                 p.data.clamp_(-self.clip_param, self.clip_param)
@@ -235,15 +233,16 @@ class WGAN(Solver):
                 x_fake = self.g(z)
                 g_loss = -self.d(x_fake).mean()
 
-                self.g_optimizer.zero_grad()
+                self.g_optim.zero_grad()
                 g_loss.backward()
-                self.g_optimizer.step()
+                self.g_optim.step()
 
                 # log
                 self.g_loss.append(float(g_loss.data))
 
             if (batch_index + 1) % self.log_interval == 0:
                 self.print_log(epoch, batch_index)
+
 
 class LSGAN(Solver):
     def __init__(self, args):
@@ -257,12 +256,12 @@ class LSGAN(Solver):
             self.g.cuda()
             self.d.cuda()
 
-        self.g_optimizer = torch.optim.Adam(self.g.parameters(),
-                                            lr=self.g_lr,
-                                            betas=(self.g_beta1, self.g_beta2))
-        self.d_optimizer = torch.optim.Adam(self.d.parameters(),
-                                            lr=self.d_lr,
-                                            betas=(self.d_beta1, self.d_beta2))
+        self.g_optim = torch.optim.Adam(self.g.parameters(),
+                                        lr=self.g_lr,
+                                        betas=(self.g_beta1, self.g_beta2))
+        self.d_optim = torch.optim.Adam(self.d.parameters(),
+                                        lr=self.d_lr,
+                                        betas=(self.d_beta1, self.d_beta2))
 
     def train(self, epoch):
         for batch_index, (x, _) in enumerate(self.dataloader):
@@ -274,11 +273,12 @@ class LSGAN(Solver):
                 z = z.cuda()
 
             x_fake = self.g(z).detach()
-            d_loss = 0.5 * (self.d(x) - 1).pow(2).mean() + 0.5 * self.d(x_fake).pow(2).mean()
+            d_loss = 0.5 * (self.d(x) - 1).pow(2).mean() + \
+                0.5 * self.d(x_fake).pow(2).mean()
 
-            self.d_optimizer.zero_grad()
+            self.d_optim.zero_grad()
             d_loss.backward()
-            self.d_optimizer.step()
+            self.d_optim.step()
 
             # log
             self.d_loss.append(float(d_loss.data))
@@ -292,9 +292,9 @@ class LSGAN(Solver):
                 x_fake = self.g(z)
                 g_loss = 0.5 * (self.d(x_fake) - 1).pow(2).mean()
 
-                self.g_optimizer.zero_grad()
+                self.g_optim.zero_grad()
                 g_loss.backward()
-                self.g_optimizer.step()
+                self.g_optim.step()
 
                 # log
                 self.g_loss.append(float(g_loss.data))
@@ -315,13 +315,12 @@ class WGANGP(Solver):
             self.g.cuda()
             self.d.cuda()
 
-        self.g_optimizer = torch.optim.Adam(self.g.parameters(),
-                                            lr=self.g_lr,
-                                            betas=(self.g_beta1, self.g_beta2))
-        self.d_optimizer = torch.optim.Adam(self.d.parameters(),
-                                            lr=self.d_lr,
-                                            betas=(self.d_beta1, self.d_beta2))
-
+        self.g_optim = torch.optim.Adam(self.g.parameters(),
+                                        lr=self.g_lr,
+                                        betas=(self.g_beta1, self.g_beta2))
+        self.d_optim = torch.optim.Adam(self.d.parameters(),
+                                        lr=self.d_lr,
+                                        betas=(self.d_beta1, self.d_beta2))
 
     def gradient_penalty(self, x, x_fake):
         epsilon = Variable(torch.rand(len(x), 1, 1, 1))
@@ -339,7 +338,8 @@ class WGANGP(Solver):
                          grad_outputs=grad_outputs,
                          create_graph=True)[0]
 
-        gradient_penalty = (gradients.view(len(x), -1).norm(2, dim=1) - 1).pow(2)
+        gradient_penalty = (gradients.view(
+            len(x), -1).norm(2, dim=1) - 1).pow(2)
 
         return gradient_penalty
 
@@ -353,11 +353,12 @@ class WGANGP(Solver):
                 z = z.cuda()
 
             x_fake = self.g(z).detach()
-            d_loss = self.d(x_fake).mean() - self.d(x).mean() + self.penalty * self.gradient_penalty(x, x_fake).mean()
+            d_loss = self.d(x_fake).mean() - self.d(x).mean() + \
+                self.penalty * self.gradient_penalty(x, x_fake).mean()
 
-            self.d_optimizer.zero_grad()
+            self.d_optim.zero_grad()
             d_loss.backward()
-            self.d_optimizer.step()
+            self.d_optim.step()
 
             # log
             self.d_loss.append(float(d_loss.data))
@@ -371,9 +372,9 @@ class WGANGP(Solver):
                 x_fake = self.g(z)
                 g_loss = - self.d(x_fake).mean()
 
-                self.g_optimizer.zero_grad()
+                self.g_optim.zero_grad()
                 g_loss.backward()
-                self.g_optimizer.step()
+                self.g_optim.step()
 
                 # log
                 self.g_loss.append(float(g_loss.data))
