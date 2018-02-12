@@ -101,7 +101,7 @@ ENV/
 .mypy_cache/
 
 data/
-dcgan/
+gan/
 lsgan/
 wgan/
 wgangp/
