@@ -1,5 +1,5 @@
 # MNIST GANs
 
 ## TO-DO List
- - WGAN-GP
- - Conditional GAN
+ - [x] WGAN-GP
+ - [ ] Conditional GAN
