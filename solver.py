@@ -38,27 +38,7 @@ class Solver:
         self.clip_param = args.clip_param
         self.penalty = args.penalty
 
-        # build
-        self.build_model()
-        self.build_dataloader()
-
-        # logging
-        self.g_loss = []
-        self.d_loss = []
-
-        # make sample
-        self.z = Variable(torch.randn(16 * 16, 100), volatile=True)
-        if self.cuda:
-            self.z = self.z.cuda()
-
-        # makedir
-        os.makedirs(self.type, exist_ok=True)
-
-        self.picklefile = os.path.join(self.type, 'model.pickle')
-        if os.path.exists(self.picklefile):
-            self.load()
-
-    def build_dataloader(self):
+        # dataset
         self.transform = transforms.Compose([
             transforms.Resize(64),
             transforms.ToTensor()
@@ -73,11 +53,22 @@ class Solver:
                                           shuffle=True,
                                           num_workers=self.num_workers)
 
+        # logging
+        self.g_loss = []
+        self.d_loss = []
+
     def solve(self):
+        z = Variable(torch.randn(16*16, 100), volatile=True)
+
+        if self.cuda:
+            z = z.cuda()
+
         for epoch in range(self.epochs):
             self.train(epoch)
-            self.make_sample(epoch)
-            self.save()
+            self.make_sample(z, epoch)
+
+            f = os.path.join(self.type, 'model_{:02d}.pickle'.format(epoch+1))
+            self.save(f)
 
     def print_log(self, epoch, batch_index):
         num_batches = len(self.dataset) // self.batch_size
@@ -86,15 +77,17 @@ class Solver:
               'iter: {}/{},'.format(batch_index + 1, num_batches),
               'g_loss: {:.4f}, d_loss: {:.4f}'.format(self.g_loss[-1], self.d_loss[-1]))
 
-    def make_sample(self, epoch):
+    def make_sample(self, z, epoch):
         self.g.eval()
 
         filename = os.path.join(self.type, 'sample_{}.jpg'.format(epoch + 1))
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         save_image(self.g(self.z).data, filename, nrow=16, normalize=True)
 
         self.g.train()
 
-    def save(self):
+    def save(self, f):
+        os.makedirs(os.path.dirname(f), exist_ok=True)
 
         d = {
             'g_dict': self.g.state_dict(),
@@ -103,26 +96,25 @@ class Solver:
             'd_optim_dict': self.d_optim.state_dict()
         }
 
-        torch.save(d, self.picklefile)
+        torch.save(d, f)
 
-        print('save')
+        print('save model {}.'.format(f))
 
-    def load(self):
-        d = torch.load(self.picklefile)
+    def load(self, f):
+        d = torch.load(f)
 
         self.g.load_state_dict(d['g_dict'])
         self.d.load_state_dict(d['d_dict'])
         self.g_optim.load_state_dict(d['g_optim_dict'])
         self.d_optim.load_state_dict(d['d_optim_dict'])
 
-        print('load')
+        print('load model {}.'.format(f))
 
 
 class GAN(Solver):
     def __init__(self, args):
         super(GAN, self).__init__(args)
 
-    def build_model(self):
         self.g = Generator()
         self.d = nn.Sequential(
             Discriminator(),
@@ -189,7 +181,6 @@ class WGAN(Solver):
     def __init__(self, args):
         super(WGAN, self).__init__(args)
 
-    def build_model(self):
         self.g = Generator()
         self.d = Discriminator()
 
@@ -248,7 +239,6 @@ class LSGAN(Solver):
     def __init__(self, args):
         super(LSGAN, self).__init__(args)
 
-    def build_model(self):
         self.g = Generator()
         self.d = Discriminator()
 
@@ -307,7 +297,6 @@ class WGANGP(Solver):
     def __init__(self, args):
         super(WGANGP, self).__init__(args)
 
-    def build_model(self):
         self.g = Generator()
         self.d = Discriminator()
 

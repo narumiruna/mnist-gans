@@ -1,3 +1,4 @@
+import os
 import argparse
 from solver import GAN, WGAN, WGANGP, LSGAN
 
@@ -24,19 +25,26 @@ def main():
     parser.add_argument('--log-interval', type=int, default=10)
     parser.add_argument('--clip-param', type=float, default=0.1, help='clipping parameter for wgan')
     parser.add_argument('--penalty', type=int, default=10, help='penalty coefficient for wgan gp')
+    parser.add_argument('--model', type=str, default=None)
     args = parser.parse_args()
     print(args)
 
     if args.type == 'gan':
-        GAN(args).solve()
+        solver = GAN(args)
     elif args.type == 'wgan':
-        WGAN(args).solve()
+        solver = WGAN(args)
     elif args.type == 'wgangp':
-        WGANGP(args).solve()
+        solver = WGANGP(args)
     elif args.type == 'lsgan':
-        LSGAN(args).solve()
+        solver = LSGAN(args)
     else:
         raise Exception('No such type.')
+
+    f = args.model
+    if f and os.path.exists(f):
+        solver.load(f)
+
+    solver.solve()
 
 if __name__ == '__main__':
     main()
