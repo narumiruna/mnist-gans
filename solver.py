@@ -82,7 +82,7 @@ class Solver:
 
         filename = os.path.join(self.type, 'sample_{}.jpg'.format(epoch + 1))
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        save_image(self.g(self.z).data, filename, nrow=16, normalize=True)
+        save_image(self.g(z).data, filename, nrow=16, normalize=True)
 
         self.g.train()
 
