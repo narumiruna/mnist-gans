@@ -1,16 +1,11 @@
-
 import os
-
 import torch
 from torch import nn
 from torch.autograd import Variable, grad
 from torch.utils import data
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
-
-
 from model import Discriminator, Generator
-
 
 class Solver:
     def __init__(self, args):
@@ -80,7 +75,7 @@ class Solver:
     def make_sample(self, z, epoch):
         self.g.eval()
 
-        filename = os.path.join(self.type, 'sample_{}.jpg'.format(epoch + 1))
+        filename = os.path.join(self.type, 'sample_{:02d}.jpg'.format(epoch + 1))
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         save_image(self.g(z).data, filename, nrow=16, normalize=True)
 
@@ -109,7 +104,6 @@ class Solver:
         self.d_optim.load_state_dict(d['d_optim_dict'])
 
         print('load model {}.'.format(f))
-
 
 class GAN(Solver):
     def __init__(self, args):
