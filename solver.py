@@ -6,6 +6,7 @@ from torch.utils import data
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 from model import Discriminator, Generator
+from bokeh import plotting
 
 class Solver:
     def __init__(self, args):
@@ -75,9 +76,9 @@ class Solver:
     def make_sample(self, z, epoch):
         self.g.eval()
 
-        filename = os.path.join(self.type, 'sample_{:02d}.jpg'.format(epoch + 1))
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        save_image(self.g(z).data, filename, nrow=16, normalize=True)
+        f = os.path.join(self.type, 'sample_{:02d}.jpg'.format(epoch + 1))
+        os.makedirs(os.path.dirname(f), exist_ok=True)
+        save_image(self.g(z).data, f, nrow=16, normalize=True)
 
         self.g.train()
 
@@ -104,6 +105,17 @@ class Solver:
         self.d_optim.load_state_dict(d['d_optim_dict'])
 
         print('load model {}.'.format(f))
+
+    def plot_loss(self):
+        p = plotting.figure(sizing_mode='stretch_both')
+        x = range(len(self.g_loss))
+
+        p.line(x, self.g_loss, line_color='green', alpha=0.5, line_width=5, legend='g loss')
+        p.line(x, self.d_loss, line_color='blue', alpha=0.5, line_width=5, legend='d loss')
+
+        f = os.path.join(self.type, 'loss.html')
+        plotting.output_file(f)
+        plotting.save(p)
 
 class GAN(Solver):
     def __init__(self, args):
@@ -169,6 +181,7 @@ class GAN(Solver):
 
             if (batch_index + 1) % self.log_interval == 0:
                 self.print_log(epoch, batch_index)
+                self.plot_loss()
 
 
 class WGAN(Solver):
@@ -227,6 +240,7 @@ class WGAN(Solver):
 
             if (batch_index + 1) % self.log_interval == 0:
                 self.print_log(epoch, batch_index)
+                self.plot_loss()
 
 
 class LSGAN(Solver):
@@ -285,6 +299,7 @@ class LSGAN(Solver):
 
             if (batch_index + 1) % self.log_interval == 0:
                 self.print_log(epoch, batch_index)
+                self.plot_loss()
 
 
 class WGANGP(Solver):
@@ -364,3 +379,4 @@ class WGANGP(Solver):
 
             if (batch_index + 1) % self.log_interval == 0:
                 self.print_log(epoch, batch_index)
+                self.plot_loss()
