@@ -14,4 +14,3 @@
  - [BEGAN: Boundary Equilibrium Generative Adversarial Networks](https://arxiv.org/abs/1703.10717)
  - [Energy-based Generative Adversarial Network](https://arxiv.org/abs/1609.03126)
  - [Conditional Generative Adversarial Nets](https://arxiv.org/abs/1411.1784)
- 
