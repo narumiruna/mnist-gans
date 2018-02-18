@@ -17,6 +17,7 @@ parser.add_argument('--workers', type=int, default=0)
 parser.add_argument('--epochs', type=int, default=20)
 parser.add_argument('--log-interval', type=int, default=10)
 parser.add_argument('--no-cuda', action='store_true')
+parser.add_argument('--nrow', type=int, default=16)
 args = parser.parse_args()
 print(args)
 
@@ -159,17 +160,16 @@ def train(epoch):
                   'loss d: {:.4f}.'.format(log['loss_d'][-1]))
             plot_loss()
 
-def plot_sample(epoch, nrow=8):
+z = autograd.Variable(torch.randn(args.nrow ** 2, 100), volatile=True)
+if use_cuda:
+    z = z.cuda()
 
-    z = autograd.Variable(torch.randn(nrow ** 2, 100), volatile=True)
-    if use_cuda:
-        z = z.cuda()
-
+def plot_sample(epoch):
     net_g.eval()
 
     os.makedirs(args.dir, exist_ok=True)
     f = os.path.join(args.dir, 'sample_{}.jpg'.format(str(epoch + 1).zfill(2)))
-    torchvision.utils.save_image(net_g(z).data, f, normalize=True, nrow=nrow)
+    torchvision.utils.save_image(net_g(z).data, f, normalize=True, nrow=args.nrow)
 
     net_g.train()
 
