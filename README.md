@@ -9,8 +9,11 @@
 
 ## Results
 
+### GAN
+![](https://media.giphy.com/media/x4aZVR7xtIrXJvPOXX/giphy.gif)
+
 ### WGAN-GP
-![WGAN-GP](https://media.giphy.com/media/39qzAVy7qhuKHQebJ6/giphy.gif)
+![](https://media.giphy.com/media/39qzAVy7qhuKHQebJ6/giphy.gif)
 
 ## References
  - [Generative Adversarial Networks](https://arxiv.org/abs/1406.2661)
