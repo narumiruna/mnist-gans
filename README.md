@@ -18,6 +18,9 @@
 ### WGAN-GP
 ![](https://media.giphy.com/media/39qzAVy7qhuKHQebJ6/giphy.gif)
 
+### LSGAN
+![](https://media.giphy.com/media/kwJZzKqQgHGrOg0431/giphy.gif)
+
 ## References
  - [Generative Adversarial Networks](https://arxiv.org/abs/1406.2661)
  - [Wasserstein GAN](https://arxiv.org/abs/1701.07875)
