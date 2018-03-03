@@ -12,6 +12,9 @@
 ### GAN
 ![](https://media.giphy.com/media/x4aZVR7xtIrXJvPOXX/giphy.gif)
 
+### WGAN
+![](https://media.giphy.com/media/5VuUbKvpplGZCNswC7/giphy.gif)
+
 ### WGAN-GP
 ![](https://media.giphy.com/media/39qzAVy7qhuKHQebJ6/giphy.gif)
 
