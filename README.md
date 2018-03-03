@@ -1,10 +1,17 @@
 # MNIST GANs
 
 ## TO-DO List
+
  - [x] WGAN-GP
  - [ ] Conditional GAN
  - [ ] BEGAN
  - [ ] EBGAN
+
+## Results
+
+### WGAN-GP
+
+![](https://i.imgur.com/uVi38UU.gif)
 
 ## References
  - [Generative Adversarial Networks](https://arxiv.org/abs/1406.2661)
