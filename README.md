@@ -10,7 +10,7 @@
 ## Results
 
 ### WGAN-GP
-![WGAN-GP](https://media.giphy.com/media/PRnVcAZBmK3aOyWPSG/giphy.gif)
+![WGAN-GP](https://media.giphy.com/media/39qzAVy7qhuKHQebJ6/giphy.gif)
 
 ## References
  - [Generative Adversarial Networks](https://arxiv.org/abs/1406.2661)
