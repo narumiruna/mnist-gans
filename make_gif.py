@@ -13,5 +13,5 @@ images = []
 for path in paths:
     images.append(imageio.imread(path))
 
-imageio.mimsave(join(args.dir, 'sample.gif'), images)
+imageio.mimsave(join(args.dir, 'sample.gif'), images, fps=1)
 
